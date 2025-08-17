@@ -1,28 +1,30 @@
-# JWT Generator (Client-side)
+# JWT Builder — Gerador de JWT
 
-Pequeno web app para gerar JSON Web Tokens (JWT) no navegador usando HMAC SHA-256.
+## Visão geral
+JWT Builder é uma ferramenta para gerar JSON Web Tokens (JWT) de forma rápida e segura. Projetada para desenvolvedores, equipes de QA e integradores, a aplicação permite criar tokens configuráveis em segundos, prontos para testes, demonstrações e integrações.
 
-Arquivos:
-- `index.html` — interface principal.
-- `styles.css` — estilos modernos e responsivos.
-- `script.js` — lógica de geração de JWT e cópia para clipboard.
+## O que faz
+- Gera tokens JWT assinados com parâmetros personalizáveis.
+- Permite definir payload do token.
+- Interface direta para copiar, baixar ou testar o token gerado.
 
-Como usar:
-1. Abra `index.html` no navegador (duplo-clique ou sirva com um servidor estático).
-2. Insira a `Key` (obrigatório) que será usada para assinar o token.
-3. Insira um `Payload` em JSON (opcional). Se deixar vazio, será usado `{}`.
-4. Clique em "Gerar Token". O token aparecerá no campo abaixo.
-5. Clique no botão de copiar para copiar o token (aparecerá o aviso "Copiado!").
+## Por que usar
+- Economiza tempo ao criar tokens para desenvolvimento e teste.
+- Facilita a integração entre serviços que usam JWT.
+- Produto pronto: não exige configuração local nem conhecimento do código.
 
-Observações de segurança:
-- A key e o payload nunca deixam seu navegador — tudo é feito localmente.
-- Não use essa ferramenta para chaves de produção sensíveis.
+## Como começar
+1. Acesse o site: https://jwt.densyy.com
+2. Preencha os campos desejados (key e payload).
+3. Gere o token e copie ou baixe conforme sua necessidade.
 
-Execução rápida com um servidor estático (Python):
+Observação: cuide das chaves e dados sensíveis — não compartilhe secrets em ambientes públicos.
 
-```bash
-python3 -m http.server 8000
-# então abra http://127.0.0.1:8000 no navegador
-```
+## Casos de uso comuns
+- Testes de APIs que exigem autenticação via JWT
+- Demonstrações e provas de conceito
+- Geração rápida de tokens para integração entre serviços
 
-Licença: MIT
+---
+
+Site: https://jwt.densyy.com
