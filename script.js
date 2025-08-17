@@ -1,16 +1,35 @@
-const b64url = (buffer) => {
+// -------------------- Core (funções puras) --------------------
+
+function b64url (buffer) {
   const bytes = new Uint8Array(buffer instanceof ArrayBuffer ? buffer : new TextEncoder().encode(buffer))
   let str = ''
   for (let i = 0; i < bytes.byteLength; i++) {
     str += String.fromCharCode(bytes[i])
   }
+
   return btoa(str)
     .replace(/\+/g, '-')
     .replace(/\//g, '_')
     .replace(/=+$/, '')
 }
 
-const jsonToB64Url = (obj) => b64url(JSON.stringify(obj))
+function jsonToB64Url (obj) {
+  return b64url(JSON.stringify(obj))
+}
+
+function buildSigningInput (header, payload) {
+  const h = jsonToB64Url(header)
+  const p = jsonToB64Url(payload)
+  return `${h}.${p}`
+}
+
+function parsePayload (raw) {
+  const trimmed = (raw || '').trim()
+  if (!trimmed) return {}
+  return JSON.parse(trimmed)
+}
+
+// -------------------- Gateway (crypto) --------------------
 
 async function signHMACSHA256(key, dataStr) {
   const enc = new TextEncoder()
@@ -20,107 +39,123 @@ async function signHMACSHA256(key, dataStr) {
   return b64url(signature)
 }
 
-const keyInput = document.getElementById('keyInput')
-const payloadInput = document.getElementById('payloadInput')
-const generateBtn = document.getElementById('generateBtn')
-const clearBtn = document.getElementById('clearBtn')
-const tokenOutput = document.getElementById('tokenOutput')
-const copyBtn = document.getElementById('copyBtn')
-const copiedToast = document.getElementById('copiedToast')
-const alertEl = document.getElementById('alert')
-const alertMessage = document.getElementById('alertMessage')
-const alertClose = document.getElementById('alertClose')
+async function createJWT({ header, payload }, key, signer = signHMACSHA256) {
+  const signingInput = buildSigningInput(header, payload)
+  const signature = await signer(key, signingInput)
+  return `${signingInput}.${signature}`
+}
+
+// -------------------- Adapter / UI (efeitos colaterais) --------------------
+
+const DOM = {
+  keyInput: document.getElementById('keyInput'),
+  payloadInput: document.getElementById('payloadInput'),
+  generateBtn: document.getElementById('generateBtn'),
+  clearBtn: document.getElementById('clearBtn'),
+  tokenOutput: document.getElementById('tokenOutput'),
+  copyBtn: document.getElementById('copyBtn'),
+  copiedToast: document.getElementById('copiedToast'),
+  alertEl: document.getElementById('alert'),
+  alertMessage: document.getElementById('alertMessage'),
+  alertClose: document.getElementById('alertClose')
+}
 
 function showAlert(message, timeout = 3000) {
+  const { alertEl, alertMessage } = DOM
   if (!alertEl) return
+
   alertMessage.textContent = message
   alertEl.hidden = false
   alertEl.setAttribute('aria-hidden', 'false')
-  alertEl.style.opacity = '1'
-  alertEl.style.transform = 'translateX(-50%)'
+
   if (window.__alertTimeout) clearTimeout(window.__alertTimeout)
-  window.__alertTimeout = setTimeout(() => {
+
+    window.__alertTimeout = setTimeout(() => {
     alertEl.hidden = true
     alertEl.setAttribute('aria-hidden', 'true')
   }, timeout)
 }
 
-alertClose && alertClose.addEventListener('click', () => {
-  if (alertEl) {
-    alertEl.hidden = true
-    alertEl.setAttribute('aria-hidden', 'true')
+DOM.alertClose && DOM.alertClose.addEventListener('click', () => {
+  if (DOM.alertEl) {
+    DOM.alertEl.hidden = true
+    DOM.alertEl.setAttribute('aria-hidden', 'true')
   }
 })
 
 function showToast() {
-  copiedToast.classList.add('show')
-  setTimeout(() => copiedToast.classList.remove('show'), 1400)
+  const el = DOM.copiedToast
+  if (!el) return
+  el.classList.add('show')
+  setTimeout(() => el.classList.remove('show'), 1400)
 }
 
 function setToken(token) {
-  tokenOutput.value = token
+  if (DOM.tokenOutput) DOM.tokenOutput.value = token
 }
 
-async function generateJWT() {
-  const key = keyInput.value.trim()
-  if (!key) {
-    showAlert('A key é obrigatória para gerar o token.')
-    return
-  }
+function setLoading(loading) {
+  const btn = DOM.generateBtn
+  if (!btn) return
 
-  let payload = {}
-  const raw = payloadInput.value.trim()
-  if (raw) {
-    try {
-      payload = JSON.parse(raw)
-    } catch (e) {
-      showAlert('Payload inválido: por favor insira JSON válido.')
-      return
-    }
-  }
-
-  const header = { alg: 'HS256', typ: 'JWT' }
-  const headerB64 = jsonToB64Url(header)
-  const payloadB64 = jsonToB64Url(payload)
-  const signingInput = `${headerB64}.${payloadB64}`
-  const signatureB64 = await signHMACSHA256(key, signingInput)
-  const token = `${signingInput}.${signatureB64}`
-  setToken(token)
+  btn.disabled = loading
+  btn.textContent = loading ? 'Gerando...' : 'Gerar Token'
 }
 
-generateBtn.addEventListener('click', async (e) => {
-  generateBtn.disabled = true
-  generateBtn.textContent = 'Gerando...'
-  try {
-    await generateJWT()
-  } finally {
-    generateBtn.disabled = false
-    generateBtn.textContent = 'Gerar Token'
-  }
-})
+function clearFields() {
+  if (DOM.keyInput) DOM.keyInput.value = ''
+  if (DOM.payloadInput) DOM.payloadInput.value = ''
+  if (DOM.tokenOutput) DOM.tokenOutput.value = ''
+}
 
-clearBtn.addEventListener('click', () => {
-  keyInput.value = ''
-  payloadInput.value = ''
-  tokenOutput.value = ''
-})
-
-copyBtn.addEventListener('click', async () => {
-  const token = tokenOutput.value
+async function copyTokenToClipboard() {
+  const token = DOM.tokenOutput && DOM.tokenOutput.value
   if (!token) return
+
   try {
     await navigator.clipboard.writeText(token)
     showToast()
   } catch (e) {
-    tokenOutput.select()
+    DOM.tokenOutput.select()
     document.execCommand('copy')
     showToast()
   }
-})
+}
 
-[keyInput, payloadInput].forEach(el => el.addEventListener('keydown', (ev) => {
-  if (ev.key === 'Enter' && ev.shiftKey === false && ev.target.tagName !== 'TEXTAREA') {
+// -------------------- Application wiring --------------------
+
+async function handleGenerate() {
+  try {
+    setLoading(true)
+    const key = (DOM.keyInput && DOM.keyInput.value || '').trim()
+    if (!key) {
+      showAlert('A key é obrigatória para gerar o token.')
+      return
+    }
+
+    let payload = {}
+    try {
+      payload = parsePayload(DOM.payloadInput && DOM.payloadInput.value)
+    } catch (e) {
+      showAlert('Payload inválido: por favor insira JSON válido.')
+      return
+    }
+
+    const header = { alg: 'HS256', typ: 'JWT' }
+    const token = await createJWT({ header, payload }, key)
+    setToken(token)
+  } finally {
+    setLoading(false)
+  }
+}
+
+if (DOM.generateBtn) DOM.generateBtn.addEventListener('click', handleGenerate)
+if (DOM.clearBtn) DOM.clearBtn.addEventListener('click', clearFields)
+if (DOM.copyBtn) DOM.copyBtn.addEventListener('click', copyTokenToClipboard)
+
+;[DOM.keyInput, DOM.payloadInput].forEach(el => el && el.addEventListener('keydown', (ev) => {
+  if (ev.key === 'Enter' && ev.shiftKey === false && ev.target.tagName !== 'TEXTAREA'){
     ev.preventDefault()
-    generateBtn.click()
+    DOM.generateBtn && DOM.generateBtn.click()
   }
 }))
