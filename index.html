@@ -10,7 +10,13 @@
   <main class="app">
     <div id="alert" class="alert" role="alert" aria-hidden="true" hidden>
       <div class="alert-content">
-        <div id="alertIcon" class="alert-icon" aria-hidden="true"></div>
+        <div id="alertIcon" class="alert-icon" aria-hidden="true">
+          <svg viewBox="0 0 24 24" fill="none" xmlns="http://www.w3.org/2000/svg" aria-hidden="true">
+            <circle cx="12" cy="12" r="10" stroke="currentColor" stroke-opacity="0.18" stroke-width="1.5" fill="none" />
+            <path d="M11 10h2v6h-2z" fill="currentColor" />
+            <path d="M11 7h2v2h-2z" fill="currentColor" />
+          </svg>
+        </div>
         <div id="alertMessage" class="alert-message"></div>
         <button id="alertClose" class="alert-close" aria-label="Fechar">×</button>
       </div>

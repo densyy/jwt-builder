@@ -84,6 +84,7 @@ textarea {
   font-size: 14px;
   outline: none;
   box-shadow: 0 4px 14px rgba(2, 6, 23, 0.5);
+  resize: none;
 }
 
 textarea::placeholder,
@@ -223,6 +224,12 @@ input::placeholder {
   place-items: center;
   color: var(--accent);
   font-weight: 700
+}
+
+.alert-icon svg {
+  width: 20px;
+  height: 20px;
+  display: block
 }
 
 .alert-message {
