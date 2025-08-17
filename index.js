@@ -172,18 +172,20 @@ function loadSavedPayload () {
 }
 loadSavedPayload()
 
-[DOM.keyInput, DOM.payloadInput].forEach(el => {
+function attachEnterToGenerate(el) {
   if (!el) return
+
   el.addEventListener('keydown', (ev) => {
     const key = ev && ev.key
-    const shift = ev && ev.shiftKey
+    const shiftKey = ev && ev.shiftKey
     const target = ev && ev.target
-    const tagName = target && target.tagName && String(target.tagName).toUpperCase()
-    const isTextarea = tagName === 'TEXTAREA'
+    const tagName = target && target.tagName ? String(target.tagName).toUpperCase() : ''
 
-    if (key === 'Enter' && !shift && !isTextarea) {
+    if (key === 'Enter' && !shiftKey && tagName !== 'TEXTAREA') {
       ev.preventDefault()
       if (DOM.generateBtn) DOM.generateBtn.click()
     }
   })
-})
+}
+attachEnterToGenerate(DOM.keyInput)
+attachEnterToGenerate(DOM.payloadInput)
