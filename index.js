@@ -142,7 +142,14 @@ async function handleGenerate() {
     }
 
     const header = { alg: 'HS256', typ: 'JWT' }
-    const token = await createJWT({ header, payload }, key)
+    const ONE_YEAR_SECONDS = 365 * 24 * 60 * 60
+    const nowSec = Math.floor(Date.now() / 1000)
+    const payloadWithExp = Object.assign({}, payload)
+    if (payloadWithExp.exp === undefined) {
+      payloadWithExp.exp = nowSec + ONE_YEAR_SECONDS
+    }
+
+    const token = await createJWT({ header, payload: payloadWithExp }, key)
     setToken(token)
 
     localStorage.setItem('jwt_payload', (DOM.payloadInput && DOM.payloadInput.value) || '')
