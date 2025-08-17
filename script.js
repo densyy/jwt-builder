@@ -144,6 +144,8 @@ async function handleGenerate() {
     const header = { alg: 'HS256', typ: 'JWT' }
     const token = await createJWT({ header, payload }, key)
     setToken(token)
+
+    localStorage.setItem('jwt_payload', (DOM.payloadInput && DOM.payloadInput.value) || '')
   } finally {
     setLoading(false)
   }
@@ -153,7 +155,13 @@ if (DOM.generateBtn) DOM.generateBtn.addEventListener('click', handleGenerate)
 if (DOM.clearBtn) DOM.clearBtn.addEventListener('click', clearFields)
 if (DOM.copyBtn) DOM.copyBtn.addEventListener('click', copyTokenToClipboard)
 
-;[DOM.keyInput, DOM.payloadInput].forEach(el => el && el.addEventListener('keydown', (ev) => {
+function loadSavedPayload () {
+  const saved = localStorage.getItem('jwt_payload')
+  if (saved != null && DOM.payloadInput) DOM.payloadInput.value = saved
+}
+loadSavedPayload()
+
+[DOM.keyInput, DOM.payloadInput].forEach(el => el && el.addEventListener('keydown', (ev) => {
   if (ev.key === 'Enter' && ev.shiftKey === false && ev.target.tagName !== 'TEXTAREA'){
     ev.preventDefault()
     DOM.generateBtn && DOM.generateBtn.click()
