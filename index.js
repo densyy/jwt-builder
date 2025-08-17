@@ -116,9 +116,13 @@ async function copyTokenToClipboard() {
     await navigator.clipboard.writeText(token)
     showToast()
   } catch (e) {
-    DOM.tokenOutput.select()
-    document.execCommand('copy')
-    showToast()
+    if (DOM.tokenOutput && typeof DOM.tokenOutput.select === 'function') {
+      DOM.tokenOutput.select()
+      document.execCommand('copy')
+      showToast()
+    } else {
+      showAlert('Não foi possível copiar automaticamente. Copie o token manualmente.')
+    }
   }
 }
 
@@ -168,9 +172,18 @@ function loadSavedPayload () {
 }
 loadSavedPayload()
 
-[DOM.keyInput, DOM.payloadInput].forEach(el => el && el.addEventListener('keydown', (ev) => {
-  if (ev.key === 'Enter' && ev.shiftKey === false && ev.target.tagName !== 'TEXTAREA'){
-    ev.preventDefault()
-    DOM.generateBtn && DOM.generateBtn.click()
-  }
-}))
+[DOM.keyInput, DOM.payloadInput].forEach(el => {
+  if (!el) return
+  el.addEventListener('keydown', (ev) => {
+    const key = ev && ev.key
+    const shift = ev && ev.shiftKey
+    const target = ev && ev.target
+    const tagName = target && target.tagName && String(target.tagName).toUpperCase()
+    const isTextarea = tagName === 'TEXTAREA'
+
+    if (key === 'Enter' && !shift && !isTextarea) {
+      ev.preventDefault()
+      if (DOM.generateBtn) DOM.generateBtn.click()
+    }
+  })
+})
