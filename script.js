@@ -24,6 +24,27 @@ const clearBtn = document.getElementById('clearBtn');
 const tokenOutput = document.getElementById('tokenOutput');
 const copyBtn = document.getElementById('copyBtn');
 const copiedToast = document.getElementById('copiedToast');
+const alertEl = document.getElementById('alert');
+const alertMessage = document.getElementById('alertMessage');
+const alertClose = document.getElementById('alertClose');
+
+function showAlert(message, timeout = 3000){
+  if(!alertEl) return; // defensive
+  alertMessage.textContent = message;
+  alertEl.hidden = false;
+  alertEl.setAttribute('aria-hidden', 'false');
+  alertEl.style.opacity = '1';
+  alertEl.style.transform = 'translateX(-50%)';
+  if(window.__alertTimeout) clearTimeout(window.__alertTimeout);
+  window.__alertTimeout = setTimeout(() => {
+    alertEl.hidden = true;
+    alertEl.setAttribute('aria-hidden', 'true');
+  }, timeout);
+}
+
+alertClose && alertClose.addEventListener('click', () => {
+  if(alertEl){ alertEl.hidden = true; alertEl.setAttribute('aria-hidden','true'); }
+});
 
 function showToast() {
   copiedToast.classList.add('show');
@@ -37,7 +58,7 @@ function setToken(token){
 async function generateJWT(){
   const key = keyInput.value.trim();
   if(!key){
-    alert('A key é obrigatória para gerar o token.');
+  showAlert('A key é obrigatória para gerar o token.');
     return;
   }
 
@@ -47,7 +68,7 @@ async function generateJWT(){
     try{
       payload = JSON.parse(raw);
     }catch(e){
-      alert('Payload inválido: por favor insira JSON válido.');
+  showAlert('Payload inválido: por favor insira JSON válido.');
       return;
     }
   }

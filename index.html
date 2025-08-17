@@ -8,6 +8,14 @@
 </head>
 <body>
   <main class="app">
+    <!-- Alert component (custom) -->
+    <div id="alert" class="alert" role="alert" aria-hidden="true" hidden>
+      <div class="alert-content">
+        <div id="alertIcon" class="alert-icon" aria-hidden="true"></div>
+        <div id="alertMessage" class="alert-message"></div>
+        <button id="alertClose" class="alert-close" aria-label="Fechar">×</button>
+      </div>
+    </div>
     <header class="app-header">
       <h1>Gerador de JWT</h1>
       <p class="subtitle">Crie tokens JWT no cliente — seguro e rápido.</p>
